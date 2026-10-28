@@ -1,135 +1,136 @@
 # qqbot-autopilot
 
-[![version](https://img.shields.io/badge/version-v0.1.0-blue)](CHANGELOG.md) [![license](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![version](https://img.shields.io/badge/version-v0.2.0-blue)](CHANGELOG.md) [![license](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
-给 AI 看的 QQ 机器人自举套件：一条指令，从空机器装到能聊天。
-NapCat 协议端 + AstrBot 大脑 + 感知/空间/点歌插件，版本与 SHA256 全部锁定；
-零管理员、零注册表、零系统服务，所有服务只监听 `127.0.0.1`。
+这套东西是给不会技术的人用的。把仓库 zip 下载下来，解压，双击 `安装.bat`，剩下的事照着黑色窗口来：
+扫码、回答几个问题，装完就是一个会在群里说话、会看图、会提醒、会发空间、会点歌的机器人。
 
-## 双轨定位
+底下拼起来的是三块：NapCat 当协议端，AstrBot 当大脑，再加三个插件。版本号和 SHA256 全都锁死。
+全程不需要管理员权限，不碰注册表，不装系统服务，所有服务只监听 `127.0.0.1`。
 
-同一个仓库，两种交付方式，终点相同。**买家是 AI，不是人**——人只负责按下开始。
+## 默认装法：仓库 zip + 安装.bat
 
-| 轨道 | 给谁 | 入口 | 人类要做的事 |
-|---|---|---|---|
-| **A 成品交付** | 不懂技术的客户 | `安装包.exe`（单文件，双击即装） | 扫一次码、填一次 Key |
-| **B 源码自举（BYOA）** | 有自己 agent 的开发者 / 交付方 | `AGENTS.md` | 把仓库交给 agent，回答几个问题 |
+1. 把交付方给你的仓库 zip 解压到一个普通文件夹里（别在压缩包里直接双击）。
+2. 双击根目录的 **`安装.bat`**。Windows 或杀毒软件要是拦，就选「仍要运行 / 允许」。
+3. 照着黑色窗口一步步走：
+   - 选安装盘：默认 `C`，输 `D`/`E` 就装到 `<盘>:\QQBot`；那个盘至少要有 10 GB 空闲。
+   - 用手机 QQ **小号**扫 NapCat 窗口或二维码图片里的码（10 分钟内扫完）。
+   - 粘贴中转站地址和模型 Key；Key 会明文显示在屏幕上，旁边别站人。
+   - 填管理员 QQ 号、白名单群号（可跳过）、要不要「小满」人设、要不要开机自启。
+4. 等窗口打出「安装完成」，去群里发一句「在吗」。
 
-**BYOA = Bring Your Own Agent**：不绑定厂商与客户端。WorkBuddy、DSH、Claude Code、Codex CLI
-都可以——仓库只提供协议（`AGENTS.md`）和人读文档，agent 负责环境调查、下载校验、配置落盘、
-接线与四联自检。模型 Key 也由使用者自备（不随包分发、不入库）；只有人类能做的那三件事
-（扫码、给 Key、定白名单）留成检查点，agent 不越位。
+装完的目录里有 `启动.bat` / `停止.bat` / `runtime` / `docs` / `安装信息.txt`。以后双击 `启动.bat` 开机，
+双击 `停止.bat` 关。卸载就是先停止，再把整个安装目录删掉。
 
-轨道 A 与轨道 B 产出同一套运行时：同样锁版本、同样只监听本机、同样用 `启动.bat` / `停止.bat` 起停。
+> 不想手输 Key：在 `安装.bat` 旁边放一个 `key.txt`，第一行写中转站地址，第二行写 Key，
+> 安装器会自己读并跳过那两次输入。装完记得删掉 `key.txt`。
 
-## 伴侣增强
+## 安装器做了什么
 
-这不是"问答机器人"，是住在电脑里的一个朋友。增强点都在运行时里，装完即生效：
+| 阶段 | 内容 |
+|---|---|
+| 1 环境 | 64 位检查、盘符提问、剩余空间、3001/6099/6185 端口占用；被占用会提示先停旧机器人或重启 |
+| 2 组件 | uv 0.12.23 → Python 3.12.15 → NapCat v4.18.41 → AstrBot 4.29.3 与依赖 → 三个固定 commit 插件；全部官方源 + SHA256 |
+| 3 配置 | 现场生成本机 token，写 NapCat `webui.json`、AstrBot `cmd_config.json`，不复制示例值 |
+| 4 扫码 | 最小化启动 NapCat，打开二维码图片；轮询登录配置，每 2 分钟提醒一次，最多 10 分钟 |
+| 5 接线 | 注入 OneBot 模板与 token，重启两端，断言 3001 出现 ESTABLISHED |
+| 6 收尾 | 写模型地址/Key、管理员、群白名单、人设、开机自启；做一次最小模型调用，要求 HTTP 200 |
+| 7 终验 | 3000/3001/6099/6185 全部只在本机监听，3001 已连接，打印「去群里发在吗」 |
 
-- **有人设**：默认「小满」（`docs/templates/人设-小满.md`）——短句、不卖萌、不编造经历，
-  深夜更短，拒绝时给替代方案而不说教；可在 AstrBot 后台换成主人自己写的人格。
-- **有时间感**：LLMPerception 把时间、星期、法定节假日与调休注入上下文，
-  它知道今天是中秋还是周三，也知道现在是深夜。
-- **不用 @ 也接话**：白名单群里免 @ 回话，像群友而不是客服；私聊按需开启。
-- **会看图**：群里发图它能读懂内容并接话（多模态模型）。
-- **会记事**：说"三分钟后提醒我"，到点它会回来找你。
-- **有自己的生活**：qzone 插件每天 1–3 条生活说说，能点赞、能评论，不是只会回复。
-- **会点歌**：music 插件按歌名/关键词点歌。
-- **有边界**：群白名单 + 管理员 + 仅本机监听；Key 只落本机配置，不回显、不外发。
+装失败时窗口不会一闪而过，会停住，写清「症状 + 你可以试 + 找谁」；全程日志落在
+`<安装目录>\install.log`。安装器重跑会保留 token 和数据，只补齐、更新组件和配置。
 
-增强的边界同样明确：不主动私聊陌生人、不跨群共享上下文、不碰安装目录以外的文件。
+## 组件（官方来源，全部固定）
 
-## 已验证组件（官方来源，全部固定）
-
-| 组件 | 固定版本 | 官方地址 | 校验 |
-|---|---|---|---|
-| NapCatQQ | v4.18.41 | [Releases](https://github.com/NapNeko/NapCatQQ/releases/download/v4.18.41/NapCat.Shell.Windows.Node.zip) | SHA256 `51fbb10e…7d3f0`；124,089,498 B |
-| AstrBot | 4.29.3 | [PyPI](https://pypi.org/project/astrbot/) ｜ [GitHub](https://github.com/AstrBotDevs/AstrBot) | 版本号固定，`astrbot.cli --version` 复核 |
-| Python | 3.12.15 | [astral-sh/uv](https://github.com/astral-sh/uv) | `uv python install 3.12.15` |
-| uv | 0.12.23 | 同上 | `uv self update 0.12.23` |
-| 7-Zip | 26.00（`7zr.exe`） | [7-zip.org](https://www.7-zip.org/) | SHA256 `4bec0bc5…58ba` |
-| IExpress | Windows 自带 | — | 仅 legacy 打包用，v0.2 移除 |
-
-插件（固定 commit，禁止 `latest`）：
-
-| 插件 | 仓库 | Commit |
+| 组件 | 固定版本 | 来源 |
 |---|---|---|
-| LLMPerception | https://github.com/miaoxutao123/astrbot_plugin_LLMPerception | `be48a2b3` |
-| qzone | https://github.com/Zhalslar/astrbot_plugin_qzone | `f474c50c` |
-| music | https://github.com/Zhalslar/astrbot_plugin_music | `9022a710` |
+| uv | 0.12.23 | [astral-sh/uv Releases](https://github.com/astral-sh/uv/releases/tag/0.12.23) |
+| Python | 3.12.15 | `uv python install 3.12.15`（uv 官方源） |
+| NapCatQQ | v4.18.41 | [NapCat Release](https://github.com/NapNeko/NapCatQQ/releases/download/v4.18.41/NapCat.Shell.Windows.Node.zip) |
+| AstrBot | 4.29.3 | [PyPI](https://pypi.org/project/astrbot/) ｜ [GitHub](https://github.com/AstrBotDevs/AstrBot) |
+| LLMPerception | `be48a2b3` | [仓库](https://github.com/miaoxutao123/astrbot_plugin_LLMPerception) |
+| qzone | `f474c50c` | [仓库](https://github.com/Zhalslar/astrbot_plugin_qzone) |
+| music | `9022a710` | [仓库](https://github.com/Zhalslar/astrbot_plugin_music) |
 
-完整哈希、体积与实测记录见 `docs/internal/manifest.txt`；下载地址表与离线预置规则见 `AGENTS.md` §2。
+完整 URL、大小与 SHA256 见 [`installer/components.json`](installer/components.json)；NapCat 是
+`51fbb10e…7d3f0`（124,089,498 B）。pip 依赖默认走清华镜像，镜像失败只回退官方 PyPI 一次；
+NapCat / uv / Python / 插件不走任何第三方镜像。安装器已经用不到 7-Zip；`AGENTS.md` 的 agent 路线仍按原协议用 `7zr.exe`。
 
 ## 目录
 
 ```
 qqbot-autopilot/
-├── README.md                      # 人读：定位、组件、打包
-├── AGENTS.md                      # agent 自举协议（环境→组件→配置→检查点→自检）
-├── MAINTENANCE.md                 # 运维协议：每周巡检、自修白名单、红线
-├── CHANGELOG.md                   # 版本变化与已知限制
-├── LICENSE / .gitignore
+├── 安装.bat                       # 零 AI 安装器入口（Windows 中文控制台）
+├── installer/
+│   ├── components.json            # 固定版本、URL、SHA256、插件 commit
+│   ├── lib/                       # 组件/配置/扫码等待/端口与 LLM 校验工具
+│   └── packages/                  # 离线预置包（不入库，随交付介质分发）
 ├── launcher/                      # 启动.bat / 停止.bat（安装后位于安装根目录）
-├── packaging/
-│   └── iexpress-legacy/           # IExpress 三件套 + README（v0.2 删除）
-└── docs/
-    ├── customer/                  # 对客：使用说明、填 Key、两册 AI 教学手册、post-login
-    ├── internal/                  # 内部：安装清单、交付夜分工卡
-    └── templates/                 # 模板：onebot11 配置、人设-小满
+├── docs/
+│   ├── customer/                  # 对客：使用说明、填 Key、两册 AI 教学手册、post-login
+│   ├── internal/                  # 内部：安装清单、交付夜分工卡
+│   └── templates/                 # OneBot 模板、人设-小满
+├── AGENTS.md                      # 可选：agent 自举协议
+├── MAINTENANCE.md                 # 每周巡检与自修白名单
+├── CHANGELOG.md
+└── README.md
 ```
 
-仓库不含 `runtime/`、`secrets/`、安装包、`payload.7z`、`7zr.exe`、`packages/`——它们由交付方在本地生成或预置。
+仓库不含 `runtime/`、`secrets/`、`installer/packages/`、`安装信息.txt`、日志和 token；它们由交付方预置或在目标机现场生成。
+`安装.bat` 用 Windows 中文控制台编码（CP936/GBK）、CRLF、无 BOM；改它时要保持这个编码，不然中文会乱。
+v0.1.0 的 IExpress 三件套和根目录旧 `安装包.exe` 已经在 v0.2.0 退役并从工作树删除，历史看 `CHANGELOG.md` 和 git 记录。
 
-## 装法一：成品安装包（轨道 A）
+> 交付打包：用 `git archive -o qqbot-autopilot.zip HEAD`（或只压缩 git 跟踪的文件）。
+> `payload.7z`、`installer/packages/`、`runtime/`、`.tmp/` 是本地产物，不要打进默认交付 zip。
 
-1. 双击 `安装包.exe`；SmartScreen 提示时「更多信息 → 仍要运行」。
-2. 当前版本直接装到 `C:\QQBot`，**不问盘符**（选盘是下一版本特性）。
-3. 解压约 2 分钟，自动拉起两端并打开 `127.0.0.1:6185` 与 `127.0.0.1:6099`。
-4. 下一版本会在根目录写 `安装信息.txt`；当前版本排障直接看 `C:\QQBot`。
+## 弱网 / 离线：installer/packages/
 
-装完后由《AI 教学手册》第二册接管扫码、接线与填 Key；客户自助说明见 `docs/customer/README-客户.md`。
+交付方可以把已经校验过的组件，按下面的文件名放进 `installer/packages/`（整个目录不入库）。安装器命中就直接用、
+跳过下载；校验不过就回到官方源重下，绝不用第三方包顶替：
 
-> 版本提示：已构建的 `安装包.exe` 为 013 构建（固定 `C:\QQBot`、无 `安装信息.txt`）；
-> 盘符提问与安装信息从**下一次打包**起生效，详见 `CHANGELOG.md` 与 `packaging/iexpress-legacy/README.md`。
+| 预置文件 | 组件 |
+|---|---|
+| `uv-x86_64-pc-windows-msvc.zip` | uv 0.12.23（也支持 `uv.exe`，仅做版本复核） |
+| `python-3.12.15-standalone.tar.gz` | Python 3.12.15（解压后复核版本） |
+| `NapCat.Shell.Windows.Node.zip` | NapCat v4.18.41 |
+| `astrbot_plugin_LLMPerception.zip` / `astrbot_plugin_qzone.zip` / `astrbot_plugin_music.zip` | 三个固定 commit 插件 |
+| `wheels/` | 可选：AstrBot 与插件依赖的离线 wheels |
 
-## 装法二：源码自举（轨道 B / BYOA）
+环境变量 `QQBOT_PACKAGES=<目录>` 可以改预置目录。文件名必须一字不差；`latest`、散装 zip、带 `(1)` 的副本
+一律当没有。
 
-1. 把仓库放到目标机任意目录，交给你的 agent。
-2. 让它先读 `AGENTS.md`，按 §1–§9 执行；组件获取预算 60 分钟，其余阶段 10 分钟红线。
-3. agent 会在三个检查点停下来等人：扫码（A）、模型 Key（B）、管理员与白名单（C）。
-4. 四联自检通过即交付；失败按 §9 回滚。
+## 可选：源码自举（agent 路线）
 
-`packages/` 预置协议：交付方可在仓库根预置已校验的组件包（不入库），agent 优先离线取包并复核
-SHA256，缺包再回官方源下载——弱网和离线机器不必赌 GitHub 可达性。
+如果你有自己的 agent，也可以把仓库交给它，让它读 [`AGENTS.md`](AGENTS.md) 按 §1–§9 执行：环境调查 → 组件获取 →
+配置落盘 → 三个人类检查点（扫码 / Key / 管理员与白名单）→ 四联自检。这条路线仍默认装到 `C:\QQBot`，组件预算 60 分钟，
+其余阶段 10 分钟红线；`installer/` 和 agent 路线可以共存，互不依赖。
 
-## 打包（legacy，v0.2 由零 AI 安装器取代）
+## 安全与边界
 
-1. 安装官方 7-Zip；准备 Python 3.12（推荐 uv 管理的 CPython 3.12.15）。
-2. 从 NapCat Releases 下载 `NapCat.Shell.Windows.Node.zip`，解压到 `runtime/napcat/`。
-3. 在 `runtime/python/` 安装 AstrBot 4.29.3 及插件依赖；插件源码放入
-   `runtime/astrbot/data/plugins/`，按 `AGENTS.md` 在目标机现场生成配置与本机 token。
-4. 暂存 payload：`runtime/`、`docs/customer/`、`docs/templates/`、`launcher/*.bat`（放到暂存根），
-   用官方 7-Zip 生成 LZMA `payload.7z`；`docs/internal/` 不随包。
-5. 按 `packaging/iexpress-legacy/qqbot.sed` 调整 SourceFiles，把 `payload.7z`、官方 `7zr.exe`、
-   `install.bat` 交给 IExpress 生成单文件安装包（产物不入库）。
-6. 用 `packaging/iexpress-legacy/check_stage.ps1` 检查暂存目录：绝对路径泄漏、禁止文件、必需项。
+- 所有服务只绑 `127.0.0.1`；不要把 3001/6099/6185 映射到公网，也别把面板暴露到局域网。
+- 零管理员、零注册表、零 Windows 服务；只写安装目录（开机自启是你选「是」时，往当前用户启动文件夹放一个快捷方式）。
+- token 只存在 `<安装目录>\runtime\secrets\`；模型 Key 只写本机 `cmd_config.json`，不回显、不写日志、不进报告。
+- 安装时 Key 输入可见；旁边有人就先清场，或者用 `key.txt` 并装完删除。
+- 用 QQ 小号，不用主号；个人号协议有平台风控的风险。
 
-安装后仅监听 `127.0.0.1:3001/6099/6185`；验收按 AI 手册与四联自检执行。
+## 已知限制
+
+- 安装器是 `.bat` + Python 脚本，不是签名的 `.exe`；Windows SmartScreen / 杀毒软件可能提示，得人工选「仍要运行 / 允许」。
+- 模型 Key 输入可见（按需求保留），没有隐藏输入；用 `key.txt` 能避开旁人看到屏幕。
+- 扫码等待最多 10 分钟；超时会停住并提示重跑，已装组件不会重下。
+- 组件下载依赖 GitHub / PyPI 可达性；国内弱网建议用 `installer/packages/` 预置。
+- 安装器不自动更新组件；换版本必须改 `installer/components.json` 并同步 README / CHANGELOG。
+- 中转站与 Key 是耗材，额度/地址/模型变更要主人拿主意；安装器只做一次连通性验证。
 
 ## 运维
 
-长期在线交给根目录的 `MAINTENANCE.md`：每周巡检七项、自修白名单、辅助用户守则、红线与报障格式。
-建议配成定时任务，每周一早上 8 点跑一次。
+长期在线交给根目录 [`MAINTENANCE.md`](MAINTENANCE.md)：每周巡检七项、自修白名单、辅助用户守则、红线与报障格式。
 
 ## 安全与免责
 
-- 仓库不含任何真实 Key、token、Cookie、QQ/UIN；本地配置与 `runtime/secrets/` 不入库。
-- 所有服务仅绑定 `127.0.0.1`；不要映射到公网。token 泄露时应立即轮换。
-- 使用 QQ 小号，不用主号；个人号协议存在平台风控风险，交付前请向客户说明。
-- 本项目为独立交付套件，与腾讯、NapCat、AstrBot 官方无隶属关系；
-  请遵守 QQ 平台规则及第三方组件许可。软件按现状提供，使用风险自负。
-- 已知限制（无头执行器进程回收、中转站额度、单实例锁、payload 缺陷）见 `CHANGELOG.md`。
+本项目是独立交付套件，和腾讯、NapCat、AstrBot 官方没有隶属关系；请遵守 QQ 平台规则及第三方组件许可。
+软件按现状提供，使用风险自负。
 
 ## License
 
-MIT，见 `LICENSE`。
+MIT，见 [LICENSE](LICENSE)。
