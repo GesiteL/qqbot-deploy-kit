@@ -1,0 +1,82 @@
+{
+  "schema": 1,
+  "installer_version": "0.2.0",
+  "uv": {
+    "version": "0.12.23",
+    "url": "https://github.com/astral-sh/uv/releases/download/0.12.23/uv-x86_64-pc-windows-msvc.zip",
+    "sha256": "75d05de6762778c31ee183398de7dd15093fad0ed90b1f236d8205ea5ec00c90",
+    "size": 18043715,
+    "package": "uv-x86_64-pc-windows-msvc.zip",
+    "exe_package": "uv.exe"
+  },
+  "python": {
+    "version": "3.12.15",
+    "method": "uv python install 3.12.15",
+    "package": "python-3.12.15-standalone.tar.gz"
+  },
+  "napcat": {
+    "version": "4.18.41",
+    "url": "https://github.com/NapNeko/NapCatQQ/releases/download/v4.18.41/NapCat.Shell.Windows.Node.zip",
+    "sha256": "51fbb10e7bcd56b0c2a6de86c37811e7518330e48a137ac689ab1e4d8627d3f0",
+    "size": 124089498,
+    "package": "NapCat.Shell.Windows.Node.zip"
+  },
+  "astrbot": {
+    "version": "4.29.3",
+    "index": "https://pypi.tuna.tsinghua.edu.cn/simple",
+    "fallback": "https://pypi.org/simple",
+    "packages": [
+      "astrbot==4.29.3",
+      "chinese-calendar==1.11.0",
+      "lunarcalendar==0.0.9",
+      "json5==0.17.3",
+      "apilmoji==0.3.1",
+      "Pillow==13.0.0",
+      "beautifulsoup4==4.15.0",
+      "emoji==2.16.0",
+      "ephem==4.2.1",
+      "pytz==2026.5"
+    ],
+    "checks": {
+      "astrbot": "4.29.3",
+      "chinese-calendar": "1.11.0",
+      "lunarcalendar": "0.0.9",
+      "json5": "0.17.3",
+      "apilmoji": "0.3.1",
+      "Pillow": "13.0.0",
+      "beautifulsoup4": "4.15.0",
+      "emoji": "2.16.0",
+      "ephem": "4.2.1",
+      "pytz": "2026.5"
+    }
+  },
+  "plugins": [
+    {
+      "dir": "astrbot_plugin_LLMPerception",
+      "repo": "miaoxutao123/astrbot_plugin_LLMPerception",
+      "commit": "be48a2b3506f606cf84f8d28762d3262ddf9575b",
+      "url": "https://codeload.github.com/miaoxutao123/astrbot_plugin_LLMPerception/zip/be48a2b3506f606cf84f8d28762d3262ddf9575b",
+      "sha256": "9d162b21eeb2c39669fb3cb3e3a9e4a002d27639e36a29c894ac524e01d06f9d",
+      "size": 27362,
+      "package": "astrbot_plugin_LLMPerception.zip"
+    },
+    {
+      "dir": "astrbot_plugin_qzone",
+      "repo": "Zhalslar/astrbot_plugin_qzone",
+      "commit": "f474c50c9b517655d8475df34ad0c129b70193d4",
+      "url": "https://codeload.github.com/Zhalslar/astrbot_plugin_qzone/zip/f474c50c9b517655d8475df34ad0c129b70193d4",
+      "sha256": "67cea1280bcddd206d7806c8738b36a540de8643fcf64d5e3e164d6ad47cc768",
+      "size": 2402649,
+      "package": "astrbot_plugin_qzone.zip"
+    },
+    {
+      "dir": "astrbot_plugin_music",
+      "repo": "Zhalslar/astrbot_plugin_music",
+      "commit": "9022a710aa85bd0287978384be6efa72c3eabdd1",
+      "url": "https://codeload.github.com/Zhalslar/astrbot_plugin_music/zip/9022a710aa85bd0287978384be6efa72c3eabdd1",
+      "sha256": "b60ab16d32ea3049063d72d0f1a40b222acebd6b37a92ab8e6cc8261fcf52df5",
+      "size": 5157536,
+      "package": "astrbot_plugin_music.zip"
+    }
+  ]
+}

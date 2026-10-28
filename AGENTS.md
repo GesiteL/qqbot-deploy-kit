@@ -7,8 +7,8 @@
 ## 0. 身份与契约（红线段）
 
 - **生产根目录**：`$Root = "C:\QQBot"`（默认）。只允许写这里。
-- **盘符例外（下一版本起）**：若人类用成品安装包并选了别的盘，根目录为 `<盘符>:\QQBot`——以安装根目录下的
-  `安装信息.txt` 为准；当前版本安装包固定 `C:\QQBot`。agent 自举模式仍固定 `C:\QQBot`，改盘符只走安装包。
+- **盘符例外（v0.2 安装器起）**：若人类运行根目录 `安装.bat` 并选了别的盘，根目录为 `<盘符>:\QQBot`——以安装根目录下的
+  `安装信息.txt` 为准。agent 自举模式仍固定 `C:\QQBot`，改盘符只走安装器。
 - **推演例外**：仅 `$DryRun = 1` 时可用 `$Root = "C:\QQBotRehearsal"`；推演结束立即删除，生产 agent 不得使用该模式。
 - 所有服务只绑 `127.0.0.1`；禁止 `0.0.0.0`、端口映射、管理员/UAC、注册表、Windows 服务。
 - token 只存本机 `runtime\secrets\`；模型 key 仅注入本机 `cmd_config.json`（内存传递，不落明文文件、不回显、不发聊天、不写日志/仓库/报告；报告只写 `***`）。
@@ -82,6 +82,9 @@ New-Item -ItemType Directory -Force "$Root\runtime","$Root\logs","$Root\docs" | 
 | `packages\7zr.exe` | 7-Zip Extra 26.00 | SHA256 与 §2.1 一致 |
 | `packages\wheels\`（可选） | AstrBot 与插件依赖 | `uv pip install --no-index --find-links` 成功 |
 
+> `installer\packages\` 是零 AI 安装器（`安装.bat`）的预置目录，本节 `packages\` 是 agent 路线的预置目录；
+> 两者文件名协议相似但不要混用。
+
 取包顺序（固定，不得跳步）：
 1. `packages\` 命中且校验通过 → 直接用，**不联网**。
 2. 未命中 / 校验失败 → 按 §2.1 官方地址下载；**不得**拿第三方包顶上。
@@ -129,8 +132,9 @@ git -C "$p\astrbot_plugin_music" checkout 9022a710aa85bd0287978384be6efa72c3eabd
 
 ### 2.5 打包工具与缓存加速
 
-**7zr 26.00**（官方 7-Zip Extra，仅打包用）：`https://www.7-zip.org/a/7zr.exe`，SHA256
-`4bec0bc59836a890a11568b58bd12a3e7b23a683557340562da211b6088058ba`；IExpress 为 Windows 自带（legacy，见 `packaging/iexpress-legacy/`）。
+**7zr 26.00**（官方 7-Zip Extra，仅 agent 路线解压/打包用）：`https://www.7-zip.org/a/7zr.exe`，SHA256
+`4bec0bc59836a890a11568b58bd12a3e7b23a683557340562da211b6088058ba`。v0.2 零 AI 安装器不再需要 7zr；
+IExpress legacy 已删除，历史见 `CHANGELOG.md` 与 git。
 
 缓存加速（仅推演/预置交付）：允许复制已验证的 `runtime\`；**按完整路径**排除 `secrets`、`.venv`，
 不要按目录名排除 `webchat/cache/plugin_data`（代码与数据同名，实测会删掉 AstrBot 的 webchat 模块）；
@@ -153,7 +157,7 @@ $env:QQBOT_ROOT = $Root
 
 ## 4. 人类检查点 A：扫码
 
-> **路径约定**：本节与 §5 中的 `$Root` 指安装根目录（自举默认 `C:\QQBot`；下一版本安装包可选盘时为其盘符下的 `QQBot`）。
+> **路径约定**：本节与 §5 中的 `$Root` 指安装根目录（自举默认 `C:\QQBot`；v0.2 安装器可选盘时为其盘符下的 `QQBot`，以 `安装信息.txt` 为准）。
 >
 > **agent 直启协议（置顶，agent 必读）**：agent **禁止调用 `cmd.exe` / `*.bat`**（部分执行器有命令校验拦截）。
 > - **NapCat 直启**：`Start-Process "$Root\runtime\napcat\node.exe" -ArgumentList "index.js" -WorkingDirectory "$Root\runtime\napcat" -WindowStyle Minimized`

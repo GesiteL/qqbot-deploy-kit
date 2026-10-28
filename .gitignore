@@ -3,7 +3,11 @@
 payload.7z
 7zr.exe
 packages/
+installer/packages/
 安装信息.txt
+
+# Customer key shortcut for the installer (never commit)
+key.txt
 
 # Runtime and secrets
 runtime/
