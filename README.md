@@ -2,6 +2,8 @@
 
 [![version](https://img.shields.io/badge/version-v0.2.0-blue)](CHANGELOG.md) [![license](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
+> 面向非技术用户的 QQ 机器人一键部署套件，锁版本安装 NapCat + AstrBot 与三个插件。技术栈：Windows Batch + Python 安装器。状态：v0.2.0；部分上游固定源已失效，安装前请先看「已知限制」。
+
 这套东西是给不会技术的人用的。把仓库 zip 下载下来，解压，双击 `安装.bat`，剩下的事照着黑色窗口来：
 扫码、回答几个问题，装完就是一个会在群里说话、会看图、会提醒、会发空间、会点歌的机器人。
 
