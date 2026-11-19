@@ -1,4 +1,4 @@
-# qqbot-autopilot
+# QQ 机器人一键部署套件（qqbot-deploy-kit）
 
 [![version](https://img.shields.io/badge/version-v0.2.0-blue)](CHANGELOG.md) [![license](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
@@ -9,6 +9,14 @@
 
 底下拼起来的是三块：NapCat 当协议端，AstrBot 当大脑，再加三个插件。版本号和 SHA256 全都锁死。
 全程不需要管理员权限，不碰注册表，不装系统服务，所有服务只监听 `127.0.0.1`。
+
+## 技术栈
+
+- **交付层**：Windows Batch（`安装.bat`，CP936 / CRLF / 无 BOM）；零管理员权限、零注册表、零系统服务
+- **安装器**：Python 3.12（`installer/lib/`：组件下载与 SHA256 校验、配置生成、进程与端口编排、终验）
+- **运行时**：NapCat v4.18.41（QQ 协议端）+ AstrBot 4.29.3（消息与模型编排）+ 3 个固定 commit 插件
+- **依赖管理**：uv 0.12.23 安装 Python 与 pip 依赖；版本、URL、SHA256 统一锁在 `installer/components.json`
+- **网络边界**：所有服务只监听 `127.0.0.1`；组件只走官方源，pip 依赖默认清华镜像、失败回退官方 PyPI 一次
 
 ## 默认装法：仓库 zip + 安装.bat
 
@@ -61,7 +69,7 @@ NapCat / uv / Python / 插件不走任何第三方镜像。安装器已经用不
 ## 目录
 
 ```
-qqbot-autopilot/
+qqbot-deploy-kit/
 ├── 安装.bat                       # 零 AI 安装器入口（Windows 中文控制台）
 ├── installer/
 │   ├── components.json            # 固定版本、URL、SHA256、插件 commit
@@ -82,7 +90,7 @@ qqbot-autopilot/
 `安装.bat` 用 Windows 中文控制台编码（CP936/GBK）、CRLF、无 BOM；改它时要保持这个编码，不然中文会乱。
 v0.1.0 的 IExpress 三件套和根目录旧 `安装包.exe` 已经在 v0.2.0 退役并从工作树删除，历史看 `CHANGELOG.md` 和 git 记录。
 
-> 交付打包：用 `git archive -o qqbot-autopilot.zip HEAD`（或只压缩 git 跟踪的文件）。
+> 交付打包：用 `git archive -o qqbot-deploy-kit.zip HEAD`（或只压缩 git 跟踪的文件）。
 > `payload.7z`、`installer/packages/`、`runtime/`、`.tmp/` 是本地产物，不要打进默认交付 zip。
 
 ## 弱网 / 离线：installer/packages/
