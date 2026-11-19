@@ -35,13 +35,14 @@ def write_webui(target: Path, token: str) -> None:
         "loginRate": data.get("loginRate", 10),
         "autoLoginAccount": data.get("autoLoginAccount", ""),
         "disableWebUI": False,
-        "accessControlMode": "none",
-        "ipWhitelist": [],
-        "ipBlacklist": [],
-        "enableXForwardedFor": False,
-        "enable2FA": False,
-        "totpSecret": "",
     })
+    # 保留用户已有的访问控制与 2FA 设置，重跑不降级安全配置
+    data.setdefault("accessControlMode", "none")
+    data.setdefault("ipWhitelist", [])
+    data.setdefault("ipBlacklist", [])
+    data.setdefault("enableXForwardedFor", False)
+    data.setdefault("enable2FA", False)
+    data.setdefault("totpSecret", "")
     lib.write_json(path, data)
 
 
@@ -318,8 +319,10 @@ def write_persona(target: Path) -> None:
         raise lib.InstallError("人设模板为空")
     db = lib.astrbot_root(target) / "data" / "data_v4.db"
     db.parent.mkdir(parents=True, exist_ok=True)
+    backup_path = None
     if db.exists():
-        shutil.copy2(db, db.with_name(db.name + ".bak." + lib.stamp()))
+        backup_path = db.with_name(db.name + ".bak." + lib.stamp())
+        shutil.copy2(db, backup_path)
     con = sqlite3.connect(str(db), timeout=10)
     try:
         con.execute("PRAGMA busy_timeout=5000")
@@ -327,6 +330,8 @@ def write_persona(target: Path) -> None:
         now = datetime.now().isoformat(sep=" ")
         row = con.execute("SELECT id, system_prompt FROM personas WHERE persona_id='default'").fetchone()
         if row:
+            if backup_path:
+                log(f"  现有 default 人设将被覆盖，原库已备份：{backup_path}")
             con.execute(
                 "UPDATE personas SET system_prompt=?, updated_at=? WHERE persona_id='default'",
                 (prompt, now),

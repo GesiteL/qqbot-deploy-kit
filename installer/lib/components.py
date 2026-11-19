@@ -85,7 +85,10 @@ def download(url: str, dest: Path, log: Log, name: str) -> None:
                 raise OSError("下载结果为空文件")
             return
         except Exception as exc:  # noqa: BLE001
-            last_error = str(exc)
+            if isinstance(exc, urllib.error.HTTPError) and exc.code == 404:
+                last_error = f"HTTP 404，该固定版本可能已被上游删除：{url}"
+            else:
+                last_error = str(exc)
             if dest.exists():
                 try:
                     dest.unlink()
@@ -94,8 +97,14 @@ def download(url: str, dest: Path, log: Log, name: str) -> None:
             if attempt < 2:
                 log(f"  下载失败，2 秒后重试：{exc}")
                 time.sleep(2)
+    hint = (
+        "；提示 404 说明该固定版本已被上游删除，请用 installer\\packages\\ 预置包，"
+        "或按 components.json 更新版本与 SHA256"
+        if "404" in last_error
+        else ""
+    )
     raise lib.InstallError(
-        f"下载失败：{name}。请检查网络/代理；若网络受限，可把官方组件放到 installer\\packages\\ 后重试。"
+        f"下载失败：{name}。请检查网络/代理{hint}；也可把官方组件放到 installer\\packages\\ 后重试。"
         f"（{last_error[:160]}）"
     )
 
@@ -159,6 +168,9 @@ def quarantine(path: Path, install_dir: Path, label: str, log: Log) -> None:
         dst = backup_root / f"{label}-{lib.stamp()}-{suffix}"
     shutil.move(str(path), str(dst))
     log(f"  旧目录已移到：{dst}")
+    # 每个组件只保留最近 3 份备份，避免 NapCat 等大目录反复重装占满磁盘
+    for old in sorted(backup_root.glob(f"{label}-*"))[:-3]:
+        shutil.rmtree(old, ignore_errors=True)
 
 
 def install_napcat(manifest: dict, target: Path, packages: Path, downloads: Path, log: Log) -> None:

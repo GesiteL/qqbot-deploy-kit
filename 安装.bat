@@ -753,6 +753,8 @@ set "QQBOT_GROUPS="
 set "KEY="
 set "BASE="
 if not "%RC%"=="0" exit /b 1
+if exist "%SRC%\key.txt" del /f /q "%SRC%\key.txt" >nul 2>&1
+if exist "%SRC%\key.txt" echo [提示] key.txt 自动删除失败，请手动删除。
 call :log "USER_CONFIG_OK"
 exit /b 0
 
